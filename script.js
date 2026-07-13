@@ -162,15 +162,19 @@ function pickMeal(pool, lastName, avoidTreatNight) {
   return options[Math.floor(Math.random() * options.length)];
 }
 
-// Decide the lunch for a given day, given the previous day's dinner (if any).
+// Decide the lunch for a given day, given the previous day's dinner (if any)
+// and whether today is a weekday or weekend (weekday lunches must be
+// grab-and-go for placement; weekends can stretch to a jacket potato etc).
 // If the previous dinner was cooked in a batch (chicken, mince, cottage pie,
 // pizza...), the next day's lunch is that leftover — not a random pick —
 // so the plan never suggests "leftover X" without an X having been cooked.
-function pickLunchForDay(prevDinner, lastLunchName) {
+function pickLunchForDay(prevDinner, lastLunchName, dayOfWeek) {
   if (prevDinner && prevDinner.leftoverLunch) {
     return prevDinner.leftoverLunch;
   }
-  return pickMeal(LUNCHES, lastLunchName, false);
+  const isWeekend = dayOfWeek === 5 || dayOfWeek === 6; // Sat/Sun
+  const pool = isWeekend ? WEEKEND_LUNCHES : WEEKDAY_LUNCHES;
+  return pickMeal(pool, lastLunchName, false);
 }
 
 function generatePlan() {
@@ -185,7 +189,7 @@ function generatePlan() {
     const isTreatNight = dayOfWeek === 4 || dayOfWeek === 5 || dayOfWeek === 6; // Fri/Sat/Sun
 
     const breakfast = pickMeal(BREAKFASTS, lastBreakfast, false);
-    const lunch = pickLunchForDay(prevDinner, lastLunchName);
+    const lunch = pickLunchForDay(prevDinner, lastLunchName, dayOfWeek);
 
     let dinnerPool = DINNERS.filter(m => !recentDinners.includes(m.name));
     if (dinnerPool.length === 0) dinnerPool = DINNERS;
@@ -212,7 +216,7 @@ function regenerateDay(index) {
   const nextDay = currentPlan[index + 1];
 
   const breakfast = pickMeal(BREAKFASTS, prevDay ? prevDay.breakfast.name : null, false);
-  const lunch = pickLunchForDay(prevDay ? prevDay.dinner : null, prevDay ? prevDay.lunch.name : null);
+  const lunch = pickLunchForDay(prevDay ? prevDay.dinner : null, prevDay ? prevDay.lunch.name : null, dayOfWeek);
 
   const nearbyDinners = [prevDay?.dinner?.name, nextDay?.dinner?.name].filter(Boolean);
   let dinnerPool = DINNERS.filter(m => !nearbyDinners.includes(m.name));
@@ -225,7 +229,7 @@ function regenerateDay(index) {
   if (nextDay) {
     const nextDayOfWeek = (index + 1) % 7;
     const nextIsTreatNight = nextDayOfWeek === 4 || nextDayOfWeek === 5 || nextDayOfWeek === 6;
-    const nextLunch = pickLunchForDay(dinner, null);
+    const nextLunch = pickLunchForDay(dinner, null, nextDayOfWeek);
     const nearbyNextDinners = [dinner.name, currentPlan[index + 2]?.dinner?.name].filter(Boolean);
     let nextDinnerPool = DINNERS.filter(m => !nearbyNextDinners.includes(m.name));
     if (nextDinnerPool.length === 0) nextDinnerPool = DINNERS;
