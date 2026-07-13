@@ -98,12 +98,18 @@ const BREAKFASTS = [
   { name: "Beans on toast", ing: ["FR_BEANS", "CB_BREAD"] },
 ];
 
-const LUNCHES = [
+// Weekday lunches need to be easy to eat at placement — no oven, no real cooking.
+const WEEKDAY_LUNCHES = [
   { name: "Ham sandwich + cucumber + fruit", ing: ["FD_HAM", "CB_BREAD", "FD_CUCUMBER", "FT_APPLE"] },
   { name: "Chicken wrap + cucumber", ing: ["FD_CHICKEN_SLICES", "CB_WRAPS", "FD_CUCUMBER"] },
   { name: "Ham & cucumber plate + fruit", ing: ["FD_HAM", "FD_CUCUMBER", "FT_GRAPES"] },
-  { name: "Jacket potato + beans", ing: ["CB_POTATO", "FR_BEANS"] },
   { name: "Cold tuna pasta", ing: ["CB_TUNA", "CB_PASTA"] },
+];
+
+// Weekends can stretch to something that needs the microwave/oven properly.
+const WEEKEND_LUNCHES = [
+  ...WEEKDAY_LUNCHES,
+  { name: "Jacket potato + beans", ing: ["CB_POTATO", "FR_BEANS"] },
 ];
 
 const DINNERS = [
