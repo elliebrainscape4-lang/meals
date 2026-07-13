@@ -102,30 +102,35 @@ const LUNCHES = [
   { name: "Ham sandwich + cucumber + fruit", ing: ["FD_HAM", "CB_BREAD", "FD_CUCUMBER", "FT_APPLE"] },
   { name: "Chicken wrap + cucumber", ing: ["FD_CHICKEN_SLICES", "CB_WRAPS", "FD_CUCUMBER"] },
   { name: "Ham & cucumber plate + fruit", ing: ["FD_HAM", "FD_CUCUMBER", "FT_GRAPES"] },
-  { name: "Leftover chicken + rice", ing: ["FR_CHICKEN_BREAST", "CB_RICE"] },
-  { name: "Leftover chicken + pasta", ing: ["FR_CHICKEN_BREAST", "CB_PASTA"] },
   { name: "Jacket potato + beans", ing: ["CB_POTATO", "FR_BEANS"] },
   { name: "Cold tuna pasta", ing: ["CB_TUNA", "CB_PASTA"] },
 ];
 
 const DINNERS = [
-  { name: "Chicken + rice + peas", ing: ["FR_CHICKEN_BREAST", "CB_RICE", "FR_PEAS"] },
-  { name: "Chicken + pasta + sweetcorn", ing: ["FR_CHICKEN_BREAST", "CB_PASTA", "FR_SWEETCORN"] },
-  { name: "Chicken + mashed potato + beans", ing: ["FR_CHICKEN_BREAST", "CB_POTATO", "FR_BEANS"] },
+  { name: "Chicken + rice + peas", ing: ["FR_CHICKEN_BREAST", "CB_RICE", "FR_PEAS"],
+    leftoverLunch: { name: "Leftover chicken + rice", ing: ["FR_CHICKEN_BREAST", "CB_RICE"] } },
+  { name: "Chicken + pasta + sweetcorn", ing: ["FR_CHICKEN_BREAST", "CB_PASTA", "FR_SWEETCORN"],
+    leftoverLunch: { name: "Leftover chicken + pasta", ing: ["FR_CHICKEN_BREAST", "CB_PASTA"] } },
+  { name: "Chicken + mashed potato + beans", ing: ["FR_CHICKEN_BREAST", "CB_POTATO", "FR_BEANS"],
+    leftoverLunch: { name: "Leftover chicken + potato", ing: ["FR_CHICKEN_BREAST", "CB_POTATO"] } },
   { name: "Fish fingers + wedges + peas", ing: ["FR_FISH_FINGERS", "FR_CHIPS", "FR_PEAS"] },
   { name: "Fish fingers + wedges + broccoli", ing: ["FR_FISH_FINGERS", "FR_CHIPS", "FR_BROCCOLI"] },
   { name: "Tuna pasta + sweetcorn", ing: ["CB_TUNA", "CB_PASTA", "FR_SWEETCORN"] },
   { name: "Tuna jacket potato + beans", ing: ["CB_TUNA", "CB_POTATO", "FR_BEANS"] },
   { name: "Egg fried rice", ing: ["FD_EGGS", "CB_RICE", "FR_PEAS", "FR_SWEETCORN"] },
   { name: "Noodles + egg + broccoli", ing: ["CB_NOODLES", "FD_EGGS", "FR_BROCCOLI"] },
-  { name: "Beef mince + pasta + garlic bread", ing: ["FD_MINCE", "CB_PASTA", "CB_KETCHUP", "FR_GARLIC_BREAD"] },
-  { name: "Beef mince + rice + peas", ing: ["FD_MINCE", "CB_RICE", "FR_PEAS"] },
+  { name: "Beef mince + pasta + garlic bread", ing: ["FD_MINCE", "CB_PASTA", "CB_KETCHUP", "FR_GARLIC_BREAD"],
+    leftoverLunch: { name: "Leftover mince pasta", ing: ["FD_MINCE", "CB_PASTA"] } },
+  { name: "Beef mince + rice + peas", ing: ["FD_MINCE", "CB_RICE", "FR_PEAS"],
+    leftoverLunch: { name: "Leftover mince + rice", ing: ["FD_MINCE", "CB_RICE"] } },
   { name: "Bacon + eggs + toast", ing: ["FD_BACON", "FD_EGGS", "CB_BREAD"] },
   { name: "Bacon + beans + toast", ing: ["FD_BACON", "FR_BEANS", "CB_BREAD"] },
   { name: "Plain omelette + toast", ing: ["FD_EGGS", "CB_BREAD", "FD_BUTTER"] },
   { name: "Beans + toast", ing: ["FR_BEANS", "CB_BREAD"] },
-  { name: "Cottage pie (batch-cooked)", ing: ["FD_MINCE", "CB_POTATO", "CB_GRAVY"], treatNight: true },
-  { name: "Pizza + cucumber + garlic bread", ing: ["FR_PIZZA", "FD_CUCUMBER", "FR_GARLIC_BREAD"], treatNight: true },
+  { name: "Cottage pie (batch-cooked)", ing: ["FD_MINCE", "CB_POTATO", "CB_GRAVY"], treatNight: true,
+    leftoverLunch: { name: "Leftover cottage pie", ing: ["FD_MINCE", "CB_POTATO"] } },
+  { name: "Pizza + cucumber + garlic bread", ing: ["FR_PIZZA", "FD_CUCUMBER", "FR_GARLIC_BREAD"], treatNight: true,
+    leftoverLunch: { name: "Leftover pizza slices", ing: ["FR_PIZZA"] } },
 ];
 
 const WEEKDAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -151,17 +156,30 @@ function pickMeal(pool, lastName, avoidTreatNight) {
   return options[Math.floor(Math.random() * options.length)];
 }
 
+// Decide the lunch for a given day, given the previous day's dinner (if any).
+// If the previous dinner was cooked in a batch (chicken, mince, cottage pie,
+// pizza...), the next day's lunch is that leftover — not a random pick —
+// so the plan never suggests "leftover X" without an X having been cooked.
+function pickLunchForDay(prevDinner, lastLunchName) {
+  if (prevDinner && prevDinner.leftoverLunch) {
+    return prevDinner.leftoverLunch;
+  }
+  return pickMeal(LUNCHES, lastLunchName, false);
+}
+
 function generatePlan() {
   const plan = [];
-  let lastBreakfast = null, lastLunch = null;
+  let lastBreakfast = null;
+  let lastLunchName = null;
   const recentDinners = [];
+  let prevDinner = null;
 
   for (let i = 0; i < DAYS_IN_ROTATION; i++) {
     const dayOfWeek = i % 7; // 0 = Mon ... 6 = Sun
     const isTreatNight = dayOfWeek === 4 || dayOfWeek === 5 || dayOfWeek === 6; // Fri/Sat/Sun
 
     const breakfast = pickMeal(BREAKFASTS, lastBreakfast, false);
-    const lunch = pickMeal(LUNCHES, lastLunch, false);
+    const lunch = pickLunchForDay(prevDinner, lastLunchName);
 
     let dinnerPool = DINNERS.filter(m => !recentDinners.includes(m.name));
     if (dinnerPool.length === 0) dinnerPool = DINNERS;
@@ -170,13 +188,17 @@ function generatePlan() {
     plan.push({ breakfast, lunch, dinner, dayOfWeek });
 
     lastBreakfast = breakfast.name;
-    lastLunch = lunch.name;
+    lastLunchName = lunch.name;
     recentDinners.push(dinner.name);
     if (recentDinners.length > 4) recentDinners.shift();
+    prevDinner = dinner;
   }
   return plan;
 }
 
+// Rerolling a single day also has to keep the day after it honest: if that
+// day's lunch was "leftover"-something from the old dinner, it needs
+// updating once the dinner changes.
 function regenerateDay(index) {
   const dayOfWeek = index % 7;
   const isTreatNight = dayOfWeek === 4 || dayOfWeek === 5 || dayOfWeek === 6;
@@ -184,7 +206,7 @@ function regenerateDay(index) {
   const nextDay = currentPlan[index + 1];
 
   const breakfast = pickMeal(BREAKFASTS, prevDay ? prevDay.breakfast.name : null, false);
-  const lunch = pickMeal(LUNCHES, prevDay ? prevDay.lunch.name : null, false);
+  const lunch = pickLunchForDay(prevDay ? prevDay.dinner : null, prevDay ? prevDay.lunch.name : null);
 
   const nearbyDinners = [prevDay?.dinner?.name, nextDay?.dinner?.name].filter(Boolean);
   let dinnerPool = DINNERS.filter(m => !nearbyDinners.includes(m.name));
@@ -192,6 +214,20 @@ function regenerateDay(index) {
   const dinner = pickMeal(dinnerPool, null, !isTreatNight);
 
   currentPlan[index] = { breakfast, lunch, dinner, dayOfWeek };
+
+  // Keep the next day's lunch consistent with this day's (possibly new) dinner.
+  if (nextDay) {
+    const nextDayOfWeek = (index + 1) % 7;
+    const nextIsTreatNight = nextDayOfWeek === 4 || nextDayOfWeek === 5 || nextDayOfWeek === 6;
+    const nextLunch = pickLunchForDay(dinner, null);
+    const nearbyNextDinners = [dinner.name, currentPlan[index + 2]?.dinner?.name].filter(Boolean);
+    let nextDinnerPool = DINNERS.filter(m => !nearbyNextDinners.includes(m.name));
+    if (nextDinnerPool.length === 0) nextDinnerPool = DINNERS;
+    const nextDinner = nearbyNextDinners.includes(nextDay.dinner.name)
+      ? pickMeal(nextDinnerPool, null, !nextIsTreatNight)
+      : nextDay.dinner;
+    currentPlan[index + 1] = { ...nextDay, lunch: nextLunch, dinner: nextDinner };
+  }
 }
 
 /* =========================================================
