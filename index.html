@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Month of Meals — Meal Rotation Generator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="page">
+
+  <header class="masthead">
+    <p class="eyebrow">Meal rotation generator</p>
+    <h1>Your Month of Meals</h1>
+    <p class="sub">Thirty days of breakfast, lunch and dinner, pulled at random from meals you already eat — with a shopping list built to match, automatically.</p>
+
+    <div class="controls">
+      <button id="generateBtn" class="btn-primary">Generate my month</button>
+      <label class="toggle">
+        <input type="checkbox" id="extrasToggle" checked>
+        <span>Include snacks, drinks &amp; treats</span>
+      </label>
+      <label class="toggle">
+        <input type="checkbox" id="basicsToggle" checked>
+        <span>Include kitchen basics</span>
+      </label>
+    </div>
+  </header>
+
+  <main class="layout">
+
+    <section class="calendar" aria-labelledby="calendarHeading">
+      <div class="panel-head">
+        <h2 id="calendarHeading">30-day rotation</h2>
+        <span class="hint">Tap <span class="shuffle-icon" aria-hidden="true">&#8635;</span> to reroll a single day</span>
+      </div>
+      <div class="table-scroll">
+        <table id="mealTable">
+          <thead>
+            <tr>
+              <th class="col-day">Day</th>
+              <th>Breakfast</th>
+              <th>Lunch</th>
+              <th>Dinner</th>
+              <th class="col-reroll"></th>
+            </tr>
+          </thead>
+          <tbody id="mealTableBody">
+            <tr><td colspan="5" class="empty-state">Press "Generate my month" to build your rotation.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <aside class="receipt" aria-labelledby="shoppingHeading">
+      <div class="receipt-card">
+        <div class="receipt-head">
+          <span class="stamp">To buy</span>
+          <button id="printBtn" class="btn-ghost" disabled>Print list</button>
+        </div>
+        <h2 id="shoppingHeading" class="sr-only">Shopping list</h2>
+        <div id="shoppingList" class="shopping-list">
+          <p class="empty-state">Your shopping list appears here once you generate a month.</p>
+        </div>
+      </div>
+    </aside>
+
+  </main>
+
+  <footer class="foot-note">
+    <p>Regenerating swaps meals and rebuilds the shopping list from scratch. Nothing here is saved — screenshot or print before you close the tab.</p>
+  </footer>
+
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
